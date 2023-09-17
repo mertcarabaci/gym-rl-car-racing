@@ -190,7 +190,7 @@ class DQN(nn.Module):
 
 def evaluate(agent, n_evals=5):
     eval_env = GameEnv(render=True)
-    agent.active_net.load_state_dict(torch.load("./yello/dqn.pt")) 
+    agent.active_net.load_state_dict(torch.load("./yello/dqn111190.pt")) 
     scores = 0
     for _ in range(n_evals):
         state, _ = eval_env.reset()
@@ -210,7 +210,6 @@ def evaluate(agent, n_evals=5):
         
 
 
-
 env = GameEnv()
 state, _ = env.reset()
 actions = env.action_space.n
@@ -222,37 +221,37 @@ episode_count = 2000
 action_taken = 0
 
 
-for episode in range(episode_count):
-    print(f"Episode {episode} starting ...")
-    state, _ = env.reset()
-    while True:
-        action = agent.select_action(state)
-        next_state, reward, terminated, truncated, info = env.step(action)
-        action_taken += 1 
-        agent.memory.push(transition(state, action, reward, next_state))
-        if action_taken > 1000:
-            result = agent.learn()
-
-        state = next_state
-
-        if agent.total_steps % 10000 == 0:
-            ret = evaluate(agent)
-            history['Step'].append(agent.total_steps)
-            history['AvgReturn'].append(ret)
-            clear_output()
-            plt.figure(figsize=(8, 5))
-            plt.plot(history['Step'], history['AvgReturn'], 'r-')
-            plt.xlabel('Step', fontsize=16)
-            plt.ylabel('AvgReturn', fontsize=16)
-            plt.xticks(fontsize=14)
-            plt.yticks(fontsize=14)
-            plt.grid(axis='y')
-            plt.savefig("rewards.png")
-            
-            torch.save(agent.target_net.state_dict(), 'dqn.pt')
-
-        if terminated or truncated:
-            break
-    print(f"Episode {episode} ends in step {action_taken} ...")
+#for episode in range(episode_count):
+#    print(f"Episode {episode} starting ...")
+#    state, _ = env.reset()
+#    while True:
+#        action = agent.select_action(state)
+#        next_state, reward, terminated, truncated, info = env.step(action)
+#        action_taken += 1 
+#        agent.memory.push(transition(state, action, reward, next_state))
+#        if action_taken > 1000:
+#            result = agent.learn()
+#
+#        state = next_state
+#
+#        if agent.total_steps % 10000 == 0:
+#            ret = evaluate(agent)
+#            history['Step'].append(agent.total_steps)
+#            history['AvgReturn'].append(ret)
+#            clear_output()
+#            plt.figure(figsize=(8, 5))
+#            plt.plot(history['Step'], history['AvgReturn'], 'r-')
+#            plt.xlabel('Step', fontsize=16)
+#            plt.ylabel('AvgReturn', fontsize=16)
+#            plt.xticks(fontsize=14)
+#            plt.yticks(fontsize=14)
+#            plt.grid(axis='y')
+#            plt.savefig("rewards.png")
+#            
+#            torch.save(agent.target_net.state_dict(), 'dqn.pt')
+#
+#        if terminated or truncated:
+#            break
+#    print(f"Episode {episode} ends in step {action_taken} ...")
 
 evaluate(agent)
