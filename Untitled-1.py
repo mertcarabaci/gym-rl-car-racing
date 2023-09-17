@@ -13,13 +13,15 @@ from collections import deque
 import cv2
 import math
 
-from stable_baselines3.ddpg.policies import MlpPolicy
+from stable_baselines3.ddpg.policies import CnnPolicy
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from stable_baselines3 import DDPG
 from stable_baselines3.common.monitor import Monitor
 from gymnasium.wrappers import HumanRendering
 from gymnasium.spaces import Box
 
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # %%
 def print_frames(frame_stack):
     fig, axes = plt.subplots(1, 4, figsize=(20, 5))
@@ -41,6 +43,9 @@ class GameEnv(gym.Wrapper):
     def skip_frames(self, action, skip_count=100):
         total_reward = 0 # not sure
         for _ in range(skip_count):
+            if any(np.isnan(action)):
+                action = [0,0,0]
+                print('why nan')
             observation, reward, terminated, truncated, info = self.env.step(action)
             total_reward += reward 
             if terminated or truncated:
@@ -78,17 +83,14 @@ class GameEnv(gym.Wrapper):
 env = GameEnv(gym.make('CarRacing-v2', continuous=True, render_mode="rgb_array"))
 wrapped = HumanRendering(env)
 
-## The noise objects for DDPG
-#n_actions = env.action_space.shape[-1]
-#action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
-#
-#model = DDPG("MlpPolicy", env, verbose=1, buffer_size=10000, batch_size=32)
-#vec_env = model.get_env()
-#model.learn(total_timesteps=100000, log_interval=10)
-#model.save("ddpg_pendulum")
+# The noise objects for DDPG
+n_actions = env.action_space.shape[-1]
+action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
 
-
-
+model = DDPG("CnnPolicy", env, verbose=1, buffer_size=50000, batch_size=32, learning_rate=10000, device=DEVICE, policy_kwargs={'normalize_images':True}, action_noise=action_noise)
+vec_env = model.get_env()
+model.learn(total_timesteps=500000, log_interval=10)
+model.save("ddpg_carracing")
 
 model = DDPG.load("ddpg_pendulum", env=wrapped)
 vec_env = model.get_env()
